@@ -9,14 +9,10 @@ def random_split_dataloader(data, data_root, source_domain, target_domain, batch
         split_rate = 0.7
     else: 
         split_rate = 0.9
-    source = DG_Dataset(root_dir=data_root, domain=source_domain, split='val',
-                                     get_domain_label=False, get_cluster=False, color_jitter=color_jitter, min_scale=min_scale)
-    source_train, source_val = random_split(source, [int(len(source)*split_rate), len(source)-int(len(source)*split_rate)])
-    source_train = deepcopy(source_train)
-    source_train.dataset.split='train'
-    source_train.dataset.set_transform('train')
-    source_train.dataset.get_domain_label=get_domain_label
-    source_train.dataset.get_cluster=get_cluster
+    source_train = DG_Dataset(root_dir=data_root, domain=source_domain, split='train',
+                                     get_domain_label=False, get_cluster=get_cluster, color_jitter=color_jitter, min_scale=min_scale)
+    source_val = DG_Dataset(root_dir=data_root, domain=source_domain, split='val',
+                              get_domain_label=False, get_cluster=False, color_jitter=color_jitter, min_scale=min_scale)
     
     target_test =  DG_Dataset(root_dir=data_root, domain=target_domain, split='test',
                                    get_domain_label=False, get_cluster=False)

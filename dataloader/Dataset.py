@@ -6,6 +6,10 @@ from torchvision.datasets.folder import make_dataset, default_loader
 import numpy as np
 
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')
+from dataloader.OfficeRead import read_office_domain
+
+def return_dataset(target, office_directory, is_target, seed_id):
+    return read_office_domain(target, office_directory, is_target, seed_id)
 
 class DG_Dataset(Dataset):
     def __init__(self, root_dir, domain, split, get_domain_label=False, get_cluster=False, color_jitter=True, min_scale=0.8):
@@ -53,20 +57,23 @@ class DG_Dataset(Dataset):
         return classes, class_to_idx
     
     def load_dataset(self):
-        total_samples = []
+        train, train_label, test, test_label, valid, valid_label = return_dataset(
+            self.domain, self.root_dir, True, seed_id=0)
+        images = None
+        labels = None
+        if self.split=="train":
+            images = train
+            labels=train_label
+        elif self.split=="val":
+            images=valid
+            labels=valid_label
+        elif self.split=="test":
+            images=test
+            labels=test_label
         self.domains = np.zeros(0)
-        
-        classes, class_to_idx = self.find_classes(self.root_dir + self.domain[0] + '/')
-        self.num_class = len(classes)
-        for i, item in enumerate(self.domain):
-            path = self.root_dir + item + '/' 
-            samples = make_dataset(path, class_to_idx, IMG_EXTENSIONS)
-            total_samples.extend(samples)
-            self.domains = np.append(self.domains, np.ones(len(samples)) * i)
-            
         self.clusters = np.zeros(len(self.domains), dtype=np.int64)
-        self.images = [s[0] for s in total_samples]
-        self.labels = [s[1] for s in total_samples]
+        self.images = images
+        self.labels = labels
 
     def set_cluster(self, cluster_list):
         if len(cluster_list) != len(self.images):
