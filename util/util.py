@@ -50,7 +50,8 @@ domain_map = {
     'PACS': ['photo', 'art_painting', 'cartoon', 'sketch'],
     'PACS_random_split': ['photo', 'art_painting', 'cartoon', 'sketch'],
     'OfficeHome': ['Art', 'Clipart', 'Product', 'RealWorld'],
-    'VLCS': ['Caltech', 'Labelme', 'Pascal', 'Sun']
+    'VLCS': ['Caltech', 'Labelme', 'Pascal', 'Sun'],
+    'office': ["A","D","W"]
 }
 
 def get_domain(name):
