@@ -51,7 +51,9 @@ domain_map = {
     'PACS_random_split': ['photo', 'art_painting', 'cartoon', 'sketch'],
     'OfficeHome': ['Art', 'Clipart', 'Product', 'RealWorld'],
     'VLCS': ['Caltech', 'Labelme', 'Pascal', 'Sun'],
-    'office': ["A","D","W"]
+    'office': ["amazon","dslr","webcam"],
+    'officead': ["amazon","dslr"],
+    'officeaw': ["amazon","webcam"]
 }
 
 def get_domain(name):
@@ -62,7 +64,8 @@ def get_domain(name):
 nets_map = {
     'caffenet': {'deepall': caffenet.caffenet, 'general': caffenet.DGcaffenet},
     'alexnet': {'deepall': alexnet.alexnet, 'general': alexnet.DGalexnet},
-    'resnet': {'deepall': resnet.resnet, 'general': resnet.DGresnet}
+    'resnet': {'deepall': resnet.resnet, 'general': resnet.DGresnet},
+    'resnet50': {'deepall': resnet.resnet50, 'general': resnet.DGresnet50}
 }
 
 def get_model(name, train):
@@ -84,7 +87,7 @@ def get_model_lr(name, train, model, fc_weight=1.0, disc_weight=1.0):
         return  [(model.features, 1.0), (model.classifier[:-1], 1.0), (model.classifier[-1], 1.0* fc_weight)]
     elif name == 'caffenet' and train == 'deepall':
         return [(model.features, 1.0), (model.classifier, 1.0), (model.class_classifier, 1.0 * fc_weight)]
-    elif name == 'resnet' and train == 'deepall':
+    elif (name == 'resnet' or name=="resnet50") and train == 'deepall':
         return [(model.conv1, 1.0), (model.bn1, 1.0), (model.layer1, 1.0), (model.layer2, 1.0), (model.layer3, 1.0), 
                (model.layer4, 1.0), (model.fc, 1.0 * fc_weight)]
     
@@ -94,7 +97,7 @@ def get_model_lr(name, train, model, fc_weight=1.0, disc_weight=1.0):
     elif name == 'caffenet' and train == 'general':
         return [(model.base_model.features, 1.0),  (model.base_model.classifier, 1.0),
             (model.base_model.class_classifier, 1.0 * fc_weight), (model.discriminator, 1.0 * disc_weight)]
-    elif name == 'resnet' and train == 'general':
+    elif (name == 'resnet' or name=="resnet50") and train == 'general':
         return [(model.base_model.conv1, 1.0), (model.base_model.bn1, 1.0), (model.base_model.layer1, 1.0), 
                 (model.base_model.layer2, 1.0), (model.base_model.layer3, 1.0), (model.base_model.layer4, 1.0), 
                 (model.base_model.fc, 1.0 * fc_weight), (model.discriminator, 1.0 * disc_weight)]

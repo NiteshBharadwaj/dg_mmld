@@ -1,0 +1,5 @@
+*.txt
+*.tar
+expt_*
+*/__pycache__/*
+*.swp

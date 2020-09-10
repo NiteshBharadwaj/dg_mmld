@@ -8,7 +8,7 @@ def eval_model(model, eval_data, device, epoch, filename):
     running_corrects = 0
     # Iterate over data.
     data_num = 0
-    for inputs, labels in eval_data:
+    for inputs, labels, _ in eval_data:
         with torch.no_grad():
             inputs = inputs.to(device)
             labels = labels.to(device)

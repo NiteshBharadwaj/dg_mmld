@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../')
+sys.path.append('/data/dg_mmld')
 
 from torch.utils.data import DataLoader
 import torch
@@ -26,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--clustering-step', type=int, default=1)
     parser.add_argument('--entropy', choices=['default', 'maximum_square'])
     
+    parser.add_argument('--seed', type=int)
     parser.add_argument('--exp-num', type=int, default=0)
     parser.add_argument('--gpu', type=int, default=0)
     
@@ -68,11 +70,12 @@ if __name__ == '__main__':
 
     device = torch.device("cuda:" + str(args.gpu) if torch.cuda.is_available() else "cpu")
     get_domain_label, get_cluster = train_to_get_label(args.train, args.clustering)
-
+    torch.cuda.manual_seed_all(args.seed)
+    torch.manual_seed(args.seed)
     source_train, source_val, target_test = random_split_dataloader(
         data=args.data, data_root=args.data_root, source_domain=source_domain, target_domain=target_domain,
         batch_size=args.batch_size, get_domain_label=get_domain_label, get_cluster=get_cluster, num_workers=4,
-        color_jitter=args.color_jitter, min_scale=args.min_scale)
+        color_jitter=args.color_jitter, min_scale=args.min_scale, seed=args.seed)
         
 #     num_epoch = int(args.num_iteration / len(source_train))
 #     lr_step = int(args.lr_step / min([len(domain) for domain in source_train]))
@@ -84,7 +87,7 @@ if __name__ == '__main__':
     disc_dim = get_disc_dim(args.train, args.clustering, len(source_domain), args.num_clustering)
 
     model = get_model(args.model, args.train)(
-        num_classes=source_train.dataset.dataset.num_class, num_domains=disc_dim, pretrained=True)
+        num_classes=source_train.dataset.num_class, num_domains=disc_dim, pretrained=True)
     
     model = model.to(device)
     model_lr = get_model_lr(args.model, args.train, model, fc_weight=args.fc_weight, disc_weight=args.disc_weight)
@@ -109,7 +112,7 @@ if __name__ == '__main__':
         print('Epoch: {}/{}, Lr: {:.6f}'.format(epoch, num_epoch-1, optimizers[0].param_groups[0]['lr']))
         print('Temporary Best Accuracy is {:.4f} ({:.4f} at Epoch {})'.format(test_acc, best_acc, best_epoch))
         
-        dataset = source_train.dataset.dataset
+        dataset = source_train.dataset
     
         if args.clustering:
             if epoch % args.clustering_step == 0:
@@ -158,7 +161,7 @@ if __name__ == '__main__':
         for scheduler in schedulers:
             scheduler.step()
             
-    best_model = get_model(args.model, args.train)(num_classes=source_train.dataset.dataset.num_class, num_domains=disc_dim, pretrained=False)
+    best_model = get_model(args.model, args.train)(num_classes=source_train.dataset.num_class, num_domains=disc_dim, pretrained=False)
     best_model.load_state_dict(torch.load(os.path.join(
                 path, 'models',
                 "model_best.pt"), map_location=device))

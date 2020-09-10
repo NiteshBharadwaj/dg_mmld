@@ -12,7 +12,7 @@ def return_dataset(target, office_directory, is_target, seed_id):
     return read_office_domain(target, office_directory, is_target, seed_id)
 
 class DG_Dataset(Dataset):
-    def __init__(self, root_dir, domain, split, get_domain_label=False, get_cluster=False, color_jitter=True, min_scale=0.8):
+    def __init__(self, root_dir, domain, split, get_domain_label=False, get_cluster=False, color_jitter=True, min_scale=0.8, seed=0):
         self.root_dir = root_dir
         self.domain = domain
         self.split = split
@@ -22,7 +22,8 @@ class DG_Dataset(Dataset):
         self.min_scale = min_scale
         self.set_transform(self.split)
         self.loader = default_loader
-        
+        self.num_class = 31
+        self.seed=seed
         self.load_dataset()
 
     def __len__(self):
@@ -43,7 +44,8 @@ class DG_Dataset(Dataset):
             cluster = np.copy(self.clusters[index])
             cluster = np.int64(cluster)
             output.append(cluster)
-
+        else:
+            output.append(0)
         return tuple(output)
     
     def find_classes(self, dir_name):
@@ -57,29 +59,37 @@ class DG_Dataset(Dataset):
         return classes, class_to_idx
     
     def load_dataset(self):
-        train, train_label, test, test_label, valid, valid_label = return_dataset(
-            self.domain, self.root_dir, True, seed_id=0)
-        images = None
-        labels = None
-        if self.split=="train":
-            images = train
-            labels=train_label
-        elif self.split=="val":
-            images=valid
-            labels=valid_label
-        elif self.split=="test":
-            images=test
-            labels=test_label
-        self.domains = np.zeros(0)
+        images_list = []
+        labels_list = []
+        domains_list = []
+        d_id = 0
+        for d in self.domain:
+            train, train_label, test, test_label, valid, valid_label = return_dataset(
+                d, self.root_dir, True, seed_id=self.seed)
+            images = None
+            labels = None
+            if self.split=="train":
+                images = train
+                labels=train_label
+            elif self.split=="val":
+                images=valid
+                labels=valid_label
+            elif self.split=="test":
+                images=test
+                labels=test_label
+            images_list = images_list + images
+            labels_list = labels_list + labels
+            domains_list = domains_list + (np.zeros(len(images))+d_id).astype(int).tolist()
+        self.images = images_list
+        self.labels = labels_list
+        self.domains = domains_list
         self.clusters = np.zeros(len(self.domains), dtype=np.int64)
-        self.images = images
-        self.labels = labels
-
     def set_cluster(self, cluster_list):
         if len(cluster_list) != len(self.images):
             raise ValueError("The length of cluster_list must to be same as self.images")
         else:
             self.clusters = cluster_list
+            self.get_cluster = True
 
     def set_domain(self, domain_list):
         if len(domain_list) != len(self.images):
