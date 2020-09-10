@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from copy import deepcopy
 from torch.nn import init
-from model import caffenet, alexnet, resnet
+from model import caffenet, alexnet, resnet, noobnet
 from dataloader.dataloader import *
 from clustering.domain_split import calc_mean_std
 from sklearn.decomposition import PCA
@@ -53,7 +53,8 @@ domain_map = {
     'VLCS': ['Caltech', 'Labelme', 'Pascal', 'Sun'],
     'office': ["amazon","dslr","webcam"],
     'officead': ["amazon","dslr"],
-    'officeaw': ["amazon","webcam"]
+    'officeaw': ["amazon","webcam"],
+    "digits":["svhn","usps","mnist","mnistm","syn"]
 }
 
 def get_domain(name):
@@ -65,7 +66,8 @@ nets_map = {
     'caffenet': {'deepall': caffenet.caffenet, 'general': caffenet.DGcaffenet},
     'alexnet': {'deepall': alexnet.alexnet, 'general': alexnet.DGalexnet},
     'resnet': {'deepall': resnet.resnet, 'general': resnet.DGresnet},
-    'resnet50': {'deepall': resnet.resnet50, 'general': resnet.DGresnet50}
+    'resnet50': {'deepall': resnet.resnet50, 'general': resnet.DGresnet50},
+    'noobnet': {'deepall': noobnet.DGnoobnet, 'general': noobnet.DGnoobnet}
 }
 
 def get_model(name, train):
@@ -90,7 +92,7 @@ def get_model_lr(name, train, model, fc_weight=1.0, disc_weight=1.0):
     elif (name == 'resnet' or name=="resnet50") and train == 'deepall':
         return [(model.conv1, 1.0), (model.bn1, 1.0), (model.layer1, 1.0), (model.layer2, 1.0), (model.layer3, 1.0), 
                (model.layer4, 1.0), (model.fc, 1.0 * fc_weight)]
-    
+
     elif name == 'alexnet' and train == 'general':
         return [(model.base_model.features, 1.0),  (model.feature_layers, 1.0),
             (model.fc, 1.0 * fc_weight), (model.discriminator, 1.0 * disc_weight)]
@@ -100,6 +102,10 @@ def get_model_lr(name, train, model, fc_weight=1.0, disc_weight=1.0):
     elif (name == 'resnet' or name=="resnet50") and train == 'general':
         return [(model.base_model.conv1, 1.0), (model.base_model.bn1, 1.0), (model.base_model.layer1, 1.0), 
                 (model.base_model.layer2, 1.0), (model.base_model.layer3, 1.0), (model.base_model.layer4, 1.0), 
+                (model.base_model.fc, 1.0 * fc_weight), (model.discriminator, 1.0 * disc_weight)]
+    elif (name == 'noobnet') and train == 'general':
+        return [(model.feat_extr.conv1, 1.0), (model.feat_extr.bn1, 1.0), (model.feat_extr.layer1, 1.0),
+                (model.base_model.layer2, 1.0), (model.base_model.layer3, 1.0), (model.base_model.layer4, 1.0),
                 (model.base_model.fc, 1.0 * fc_weight), (model.discriminator, 1.0 * disc_weight)]
 
 def get_optimizer(model, init_lr, momentum, weight_decay, feature_fixed=False, nesterov=False, per_layer=False):

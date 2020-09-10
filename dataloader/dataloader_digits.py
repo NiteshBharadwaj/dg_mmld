@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader, random_split
 import numpy as np
 from copy import deepcopy
-from dataloader.Dataset import DG_Dataset
+from dataloader.Dataset_digits import DG_Dataset
 
 def random_split_dataloader(data, data_root, source_domain, target_domain, batch_size, 
                    get_domain_label=False, get_cluster=False, num_workers=4, color_jitter=True, min_scale=0.8, seed=0):

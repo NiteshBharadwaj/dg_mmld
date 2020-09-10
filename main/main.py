@@ -9,7 +9,7 @@ import os
 from util.util import *
 from train.eval import *
 from clustering.domain_split import domain_split
-from dataloader.dataloader import random_split_dataloader
+from dataloader.dataloader_digits import random_split_dataloader
 
 if __name__ == '__main__':
     
