@@ -121,6 +121,12 @@ class DG_Dataset(Dataset):
             elif self.split == "test":
                 images = target_test
                 labels = target_test_label
+            # Broadcast to three channels
+            if images.shape[1] == 1:
+                images = np.repeat(images, 3, 1)
+            # Clip to 28x28
+            if images.shape[2] == 32:
+                images = images[:, :, 2:30, 2:30]
             images_list = images_list.append(images)
             labels_list = labels_list.append(labels)
             domains_list = domains_list + (np.zeros(len(images)) + d_id).astype(int).tolist()
